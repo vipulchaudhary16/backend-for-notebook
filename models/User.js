@@ -1,4 +1,7 @@
-import mongoose from 'mongoose';
+//if type is module
+//import mongoose from 'mongoose';
+
+const mongoose = require('mongoose')
 const { Schema } = mongoose;
 
 //creating schemas for unique user login
