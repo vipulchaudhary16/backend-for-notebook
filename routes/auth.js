@@ -2,6 +2,10 @@ const express = require('express')
 const router = express.Router()
 const User = require('../models/User')
 const { body, validationResult } = require('express-validator')
+const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
+
+const JWT_SECRET = 'itsSecret';
 
 //create a User using POST "/api/auth/createUser"
 router.post('/createUser', [
@@ -16,6 +20,7 @@ router.post('/createUser', [
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
+
     //Checking weather a user with a email is exists or not
     try {
         //If there is no user with given email then user will be null
@@ -23,16 +28,68 @@ router.post('/createUser', [
         if (user) {
             return res.status(400).json({ error: "A user with this email already exists" })
         }
+
+        const salt = await bcrypt.genSalt(10);
+        const securePassword = await bcrypt.hash(req.body.password, salt);
+
         //Creating user
         user = await User.create({
             name: req.body.name,
             email: req.body.email,
-            password: req.body.password,
+            password: securePassword,
         })
-        res.send("Log in successfully")
+
+        const data ={
+            user:{
+                id : user.id
+            }
+        }
+
+        const authToken = jwt.sign(data , JWT_SECRET);
+        res.json({authToken});
+
+        // res.send("Log in successfully")
+
     } catch (error) {
         console.log(error.message);
         res.status(500).send("Some unknown error accured")
+    }
+})
+
+//Authenticate a User using POST "/api/auth/login"
+router.post('/login' , [
+    body('email' , ' Enter a valid email').isEmail(),
+    body('password' , ' Password cant be blank').exists(),
+], async (req , res)=>{
+    const error = validationResult(req);
+    if(!error.isEmpty())
+    {
+        return res.status(400).json({errors : error.array()});
+    }
+
+    const {email , password} = req.body;
+    try {
+        let user = await User.findOne({email});
+        if (!user) {
+            return res.status(400).json({error : "Please enter a valid login credentials"});
+        }
+
+        const passwordCompare = await bcrypt.compare(password , user.password);
+        if(!passwordCompare){
+            return res.status(400).json({error : "Please enter a valid login credentials"});
+        }
+
+        const data = {
+            user:{
+                id : user.id,
+            }
+        }
+        const authToken = jwt.sign(data , JWT_SECRET);
+        res.json({authToken})
+        
+    } catch (error) {
+        console.error(error.message);
+        res.status(400).send("Internal server error");
     }
 })
 module.exports = router;
