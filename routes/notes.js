@@ -1,10 +1,49 @@
-const express = require('express')
-const router = express.Router()
+const express = require("express");
+const router = express.Router();
+const fetchUser = require("../middleware/fetchUser");
+const Note = require("../models/Note");
+const { body, validationResult } = require("express-validator");
 
-router.get('/' , (req , res)=>{
+//Route 1 : get all notes
+router.get("/fetchallnotes", fetchUser, async (req, res) => {
+  const notes = await Note.find({ user: req.user.id });
+  res.json(notes);
+});
 
-    res.json([]);
+//Route 2 : Add a new notes using post request
+router.post(
+  "/addnote",
+  [
+    body("title", "Title must have minimum 2 character").isLength({ min: 2 }),
+    body("description", "Description must have minimum 5 character").isLength({
+      min: 5,
+    }),
+  ],
+  fetchUser,
+  async (req, res) => {
+    try {
+      const { title, description, tag } = req.body;
 
-})
+      //Storing result after validation
+      const errors = validationResult(req);
+      //if error array is not empty that means there must be unvalid value
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const note = new Note({
+        title,
+        description,
+        tag,
+        user: req.user.id,
+      });
+      const saveNote = await note.save();
+      res.send(saveNote);
+    } catch (error) {
+      console.error(error.message);
+      res.status(400).send("Internal server error");
+    }
+  }
+);
 
 module.exports = router;

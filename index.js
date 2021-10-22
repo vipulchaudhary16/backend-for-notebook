@@ -9,7 +9,7 @@ app.use(express.json())
 
 //our routes endpoints
 app.use('/api/auth' , require('./routes/auth'))
-// app.use('/api/notes' , require('./routes/notes'))
+app.use('/api/notes' , require('./routes/notes'))
 
 app.listen(port, () => {
   console.log(`app listening at http://localhost:${port}`)
