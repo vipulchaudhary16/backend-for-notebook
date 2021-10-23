@@ -46,4 +46,45 @@ router.post(
   }
 );
 
+//Route : 3 Update an existing note
+router.put("/updatenote/:id", fetchUser, async (req, res) => {
+  try {
+    const { title, description, tag } = req.body;
+    //Create new note object
+    const newNote = {};
+    if (title) {
+      newNote.title = title;
+    }
+    if (description) {
+      newNote.description = description;
+    }
+    if (tag) {
+      newNote.tag = tag;
+    }
+
+    //find the note to be Updated
+    let note = await Note.findById(req.params.id);
+    //if the note is not found
+    if (!note) {
+      return res.status(404).send(`Note doesn't exist`);
+    }
+
+    //if a editor is not valid user
+    if (note.user.toString() !== req.user.id) {
+      return res.status(404).send(`You are an invalid user`);
+    }
+
+    note = await Note.findByIdAndUpdate(
+      req.params.id,
+      { $set: newNote },
+      { new: true }
+    );
+
+    res.json(note);
+  } catch (error) {
+    console.error(error.message);
+    res.status(400).send("Internal server error");
+  }
+});
+
 module.exports = router;
