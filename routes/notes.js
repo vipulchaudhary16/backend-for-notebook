@@ -87,4 +87,28 @@ router.put("/updatenote/:id", fetchUser, async (req, res) => {
   }
 });
 
+//Route : 4 Delete an existing note
+router.delete("/deletenote/:id", fetchUser, async (req, res) => {
+  try {
+    //find the note to be deleted
+    let note = await Note.findById(req.params.id);
+    //if the note is not found
+    if (!note) {
+      return res.status(404).send(`Note doesn't exist`);
+    }
+
+    //if a deletor is not valid user
+    if (note.user.toString() !== req.user.id) {
+      return res.status(404).send(`You are an invalid user`);
+    }
+
+    note = await Note.findByIdAndDelete(req.params.id);
+
+    res.send("Successfully deleted");
+  } catch (error) {
+    console.error(error.message);
+    res.status(400).send("Internal server error");
+  }
+});
+
 module.exports = router;
