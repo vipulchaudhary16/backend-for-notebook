@@ -19,21 +19,25 @@ router.post(
         }),
     ],
     async (req, res) => {
+        let success = true;
         //Storing result after validation
         const errors = validationResult(req);
         //if error array is not empty that means there must be unvalid value
         if (!errors.isEmpty()) {
-            return res.status(400).json({ errors: errors.array() });
+            success = false;
+            return res.status(400).json({success, errors: errors.array() });
         }
 
         //Checking weather a user with a email is exists or not
         try {
             //If there is no user with given email then user will be null
             let user = await User.findOne({ email: req.body.email });
+            
             if (user) {
+                success = false;
                 return res
                     .status(400)
-                    .json({ error: "A user with this email already exists" });
+                    .json({ success ,error: "A user with this email already exists" });
             }
 
             const salt = await bcrypt.genSalt(10);
@@ -53,7 +57,7 @@ router.post(
             };
 
             const authToken = jwt.sign(data, JWT_SECRET);
-            res.json({ authToken });
+            res.json({ success, authToken });
 
             // res.send("Log in successfully")
         } catch (error) {
@@ -71,15 +75,16 @@ router.post(
         body("password", " Password cant be blank").exists(),
     ],
     async (req, res) => {
+        let success = true;
         const error = validationResult(req);
         if (!error.isEmpty()) {
-            return res.status(400).json({ errors: error.array() });
+            success = false;
+            return res.status(400).json({success, errors: error.array() });
         }
 
         const { email, password } = req.body;
         try {
             let user = await User.findOne({ email });
-            let success = true;
             if (!user) {
                 success = false;
                 return res
