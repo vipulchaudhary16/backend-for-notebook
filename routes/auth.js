@@ -25,19 +25,19 @@ router.post(
         //if error array is not empty that means there must be unvalid value
         if (!errors.isEmpty()) {
             success = false;
-            return res.status(400).json({success, errors: errors.array() });
+            return res.status(400).json({ success, errors: errors.array() });
         }
 
         //Checking weather a user with a email is exists or not
         try {
             //If there is no user with given email then user will be null
             let user = await User.findOne({ email: req.body.email });
-            
+
             if (user) {
                 success = false;
                 return res
                     .status(400)
-                    .json({ success ,error: "A user with this email already exists" });
+                    .json({ success, error: "A user with this email already exists" });
             }
 
             const salt = await bcrypt.genSalt(10);
@@ -61,8 +61,8 @@ router.post(
 
             // res.send("Log in successfully")
         } catch (error) {
-            console.log(error.message);
-            res.status(500).send("Some unknown error accured");
+            console.log(error);
+            res.status(500).json("Some unknown error accured");
         }
     }
 );
@@ -79,7 +79,7 @@ router.post(
         const error = validationResult(req);
         if (!error.isEmpty()) {
             success = false;
-            return res.status(400).json({success, errors: error.array() });
+            return res.status(400).json({ success, errors: error.array() });
         }
 
         const { email, password } = req.body;
@@ -89,7 +89,7 @@ router.post(
                 success = false;
                 return res
                     .status(400)
-                    .json({success, error: "Please enter a valid login credentials" });
+                    .json({ success, error: "Please enter a valid login credentials" });
             }
 
             const passwordCompare = await bcrypt.compare(password, user.password);
@@ -97,7 +97,7 @@ router.post(
                 success = false;
                 return res
                     .status(400)
-                    .json({ success , error: "Please enter a valid login credentials" });
+                    .json({ success, error: "Please enter a valid login credentials" });
             }
 
             const data = {
@@ -107,7 +107,7 @@ router.post(
             };
             const authToken = jwt.sign(data, JWT_SECRET);
             res.json({ success, authToken });
-            
+
         } catch (error) {
             console.error(error.message);
             res.status(500).send("Internal server error");
@@ -121,7 +121,7 @@ router.post(
     fetchUser,
     async (req, res) => {
         try {
-            let userId =req.user.id;
+            let userId = req.user.id;
             const user = await User.findById(userId).select("-password");
             res.send(user);
         } catch (error) {
