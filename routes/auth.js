@@ -110,7 +110,7 @@ router.post(
             
         } catch (error) {
             console.error(error.message);
-            res.status(400).send("Internal server error");
+            res.status(500).send("Internal server error");
         }
     }
 );
@@ -126,7 +126,7 @@ router.post(
             res.send(user);
         } catch (error) {
             console.error(error.message);
-            res.status(400).send("Internal server error");
+            res.status(500).send("Internal server error");
         }
     }
 );
